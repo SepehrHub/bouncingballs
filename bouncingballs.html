@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    body {
+      overflow: hidden;
+      background: deepskyblue;
+      margin: 0;
+    }
+
+    #controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 100;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      color: white;
+      background: linear-gradient(45deg, #f093fb, #f5576c);
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    button:hover {
+      background: linear-gradient(45deg, #5ee7df, #b490ca);
+      box-shadow: 0px 15px 20px rgba(0, 0, 0, 0.3);
+      transform: translateY(-3px);
+    }
+
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bouncing Balls</title>
+</head>
+
+<body>
+
+  <div id="controls">
+    <button id="toggle-animation">Pause</button>
+    <button id="increase-speed">Increase Speed</button>
+    <button id="decrease-speed">Decrease Speed</button>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <script>
+
+    var canvas = document.getElementById("canvas");
+    var c = canvas.getContext("2d");
+    var tx = window.innerWidth;
+    var ty = window.innerHeight;
+    canvas.width = tx;
+    canvas.height = ty;
+
+    var mousex = 0;
+    var mousey = 0;
+    var animationPaused = false;
+    var speedMultiplier = 1; // متغیر برای کنترل سرعت
+
+    addEventListener("mousemove", function () {
+      mousex = event.clientX;
+      mousey = event.clientY;
+    });
+
+    var grav = 0.99;
+    c.lineWidth = 5;
+
+    function randomColor() {
+      return (
+        "rgba(" + Math.round(Math.random() * 250) +
+        "," + Math.round(Math.random() * 250) +
+        "," + Math.round(Math.random() * 250) +
+        "," + Math.ceil(Math.random() * 10) / 10 + ")"
+      );
+    }
+
+    function Ball() {
+      this.color = randomColor();
+      this.radius = Math.random() * 20 + 14;
+      this.startRadius = this.radius;
+      this.x = Math.random() * (tx - this.radius * 2) + this.radius;
+      this.y = Math.random() * (ty - this.radius);
+      this.dy = (Math.random() * 2) * speedMultiplier;
+      this.dx = (Math.round((Math.random() - 0.5) * 10)) * speedMultiplier;
+      this.vel = Math.random() / 5;
+
+      this.update = function () {
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        c.fillStyle = this.color;
+        c.fill();
+      };
+    }
+
+    var bal = [];
+    for (var i = 0; i < 200; i++) {
+      bal.push(new Ball());
+    }
+
+    function animate() {
+      if (tx != window.innerWidth || ty != window.innerHeight) {
+        tx = window.innerWidth;
+        ty = window.innerHeight;
+        canvas.width = tx;
+        canvas.height = ty;
+      }
+
+      if (!animationPaused) {
+        requestAnimationFrame(animate);
+        c.clearRect(0, 0, tx, ty);
+        for (var i = 0; i < bal.length; i++) {
+          bal[i].update();
+          bal[i].y += bal[i].dy;
+          bal[i].x += bal[i].dx;
+          if (bal[i].y + bal[i].radius >= ty) {
+            bal[i].dy = -bal[i].dy * grav;
+          } else {
+            bal[i].dy += bal[i].vel;
+          }
+          if (bal[i].x + bal[i].radius > tx || bal[i].x - bal[i].radius < 0) {
+            bal[i].dx = -bal[i].dx;
+          }
+
+          if (mousex > bal[i].x - 20 && mousex < bal[i].x + 20 && mousey > bal[i].y - 50 && mousey < bal[i].y + 50 && bal[i].radius < 70) {
+            bal[i].radius += 5;
+          } else {
+            if (bal[i].radius > bal[i].startRadius) {
+              bal[i].radius -= 5;
+            }
+          }
+        }
+      }
+    }
+
+    animate();
+
+    document.getElementById('toggle-animation').addEventListener('click', function () {
+      animationPaused = !animationPaused;
+      if (!animationPaused) {
+        animate();
+        this.textContent = 'Pause';
+      } else {
+        this.textContent = 'Resume';
+      }
+    });
+
+    document.getElementById('increase-speed').addEventListener('click', function () {
+      speedMultiplier += 0.5;
+      for (var i = 0; i < bal.length; i++) {
+        bal[i].dx *= 1.5;
+        bal[i].dy *= 1.5;
+      }
+    });
+
+    document.getElementById('decrease-speed').addEventListener('click', function () {
+      speedMultiplier = Math.max(0.5, speedMultiplier - 0.5);
+      for (var i = 0; i < bal.length; i++) {
+        bal[i].dx *= 0.75;
+        bal[i].dy *= 0.75;
+      }
+    });
+
+  </script>
+</body>
+
+</html>
